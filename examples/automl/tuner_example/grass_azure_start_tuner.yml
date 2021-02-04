@@ -1,0 +1,18 @@
+mode: grass/azure
+name: MyTunerJobName # str: name of the tuner job
+
+allocation:
+  mode: single-metric-balanced # enum: single-metric-balanced / single-metric-compacted
+  metric: cpu  # enum: cpu / memory / gpu
+
+components: # component config
+  tuner:
+    image: msranni/nni:latest
+    resources:
+      cpu: 2 # int: cpu requirement (unit: cores)
+      memory: 4096m # str: memory requirement (unit: MB)
+      gpu: 0 # int: gpu requirement (units: cards)
+    num: 1 # int: number of this component
+    mount:
+      target: /mnt/data # str: target directory for user data, see "maro grass data push" for reference
+    command: "python /mnt/data/start_tuner.py" # str: command to be executed
