@@ -12,11 +12,13 @@ from nni.tuner import Tuner
 
 _parameter_id = 0
 
+
 def _get_parameter_id():
     # Each parameter id corresponds to a parameter and a job yaml file.
     global _parameter_id
     _parameter_id += 1
     return _parameter_id - 1
+
 
 def _back_parameter_id(back_num: int):
     # Fallback, if the tuner cannot generate the required parameters.
@@ -53,10 +55,11 @@ class Dispatcher():
                     self.parameter_dict[parameter_ids[i]] = parameters[i]
                     job_detail = copy.deepcopy(self.job_temp)
 
-                    job_detail['name'] = 'cluster-{}-job-{}'.format(self.cluster_name, parameter_ids[i])
+                    job_detail['name'] = 'tuner-{}-job-{}'.format(self.tuner_job_name, parameter_ids[i])
                     param = json.dumps(parameters[i])
                     for key, value in job_detail['components'].items():
-                        value['command'] = value['command'].format(param)
+                        value['command'] = 'export FINAL_RESULT_KEY={} && export JOB_NAME={} && {}'.format(
+                                            self.redis_key_final_metric, job_detail['name'], value['command'].format(param))
                     self._tuner_push_pending_job(job_detail)
             sleep(5)
 
@@ -64,7 +67,7 @@ class Dispatcher():
         metric_value_dict = self.redis_connection.hgetall(self.redis_key_final_metric)
         parameter_ids = list(self.parameter_dict.keys())
         for key in parameter_ids:
-            job_key = 'cluster-{}-job-{}'.format(self.cluster_name, key).encode()
+            job_key = 'tuner-{}-job-{}'.format(self.tuner_job_name, key).encode()
             if job_key in metric_value_dict:
                 # assume the metric is float
                 self.tuner.receive_trial_result(key, self.parameter_dict[key], float(metric_value_dict[job_key]))

@@ -5,7 +5,6 @@ nniTuner:
 search_space: search_space.json
 
 tuner_job_name: MyTunerJobName
-cluster_name: test_tuner
 
 job_temp:
   mode: grass/azure

@@ -24,7 +24,7 @@ def create_tuner(**kwargs):
 
     tuner_details = kwargs["json_dict"]
     redis_controller.set_job_details(
-        job_name==tuner_details["name"],
+        job_name=tuner_details["name"],
         job_details=tuner_details
     )
     redis_controller.push_pending_job_ticket(

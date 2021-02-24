@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 
-import os   
 import json
 import yaml
 from redis import Redis
@@ -25,6 +24,7 @@ from nni.algorithms.hpo.regularized_evolution_tuner import RegularizedEvolutionT
 from nni.algorithms.hpo.smac_tuner import SMACTuner
 '''
 
+
 def choose_tuner(tuner_name: str, tuner_args: dict):
     if tuner_name == 'GridSearch':
         from nni.algorithms.hpo.gridsearch_tuner import GridSearchTuner
@@ -39,6 +39,7 @@ def choose_tuner(tuner_name: str, tuner_args: dict):
         from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
         return HyperoptTuner('anneal', **tuner_args)
 
+
 if __name__ == "__main__":
     with open('tuner_config.yml', 'r') as f:
         tuner_config = yaml.safe_load(f)
@@ -47,19 +48,21 @@ if __name__ == "__main__":
     tuner_args = tuner_config['nniTuner']['classArgs']
     search_space_path = tuner_config['search_space']
     tuner_job_name = tuner_config['tuner_job_name']
-    cluster_name = tuner_config['cluster_name']
     job_temp = tuner_config['job_temp']
 
     local_master_details = DetailsReader.load_local_master_details()
+    local_cluster_details = DetailsReader.load_local_cluster_details()
+    cluster_name = local_cluster_details['name']
 
     tuner = choose_tuner(tuner_name, tuner_args)
 
     with open(search_space_path, 'r') as fr:
         search_space = json.load(fr)
-    
+
     tuner.update_search_space(search_space=search_space)
 
-    redis_connection = Redis(host=local_master_details['hostname'], port=local_master_details['redis']['port'], charset='utf-8', decode_responses=True)
+    redis_connection = Redis(host=local_master_details['hostname'], port=local_master_details['redis']['port'],
+                             charset='utf-8', decode_responses=True)
 
     dispatcher = Dispatcher(tuner, redis_connection, tuner_job_name, cluster_name, job_temp)
     dispatcher.run()
